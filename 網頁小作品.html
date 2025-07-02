@@ -93,6 +93,63 @@
             margin-bottom: 30px;
         }
 
+        /* 檔案上傳區域 */
+        .file-upload-section {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .file-upload-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #ff6b35;
+        }
+
+        .file-input-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .file-input {
+            padding: 15px 20px;
+            border: 2px dashed rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input:hover {
+            border-color: #ff6b35;
+            background: rgba(255,255,255,0.15);
+        }
+
+        .upload-btn {
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,107,53,0.4);
+        }
+
         /* 搜尋區域 */
         .search-container {
             background: rgba(255,255,255,0.05);
@@ -179,6 +236,25 @@
             color: white;
         }
 
+        /* 資料狀態 */
+        .data-status {
+            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .data-loaded {
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            color: white;
+        }
+
+        .data-error {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+        }
+
         /* 載入狀態 */
         .loading {
             text-align: center;
@@ -201,17 +277,6 @@
             60% { transform: translateY(-5px); }
         }
 
-        /* 錯誤訊息 */
-        .error {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            margin: 20px 0;
-            box-shadow: 0 4px 15px rgba(255,107,107,0.3);
-        }
-
         /* 球員列表 */
         .players-section {
             margin-top: 40px;
@@ -223,6 +288,15 @@
             color: #ff6b35;
             border-bottom: 2px solid #ff6b35;
             padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-count {
+            font-size: 1rem;
+            color: #cccccc;
+            font-weight: normal;
         }
 
         .players-grid {
@@ -366,12 +440,12 @@
                 font-size: 2.5rem;
             }
             
-            .search-form {
+            .search-form, .file-input-container {
                 flex-direction: column;
                 align-items: stretch;
             }
             
-            .search-input {
+            .search-input, .file-input {
                 min-width: auto;
                 margin-bottom: 10px;
             }
@@ -421,7 +495,7 @@
                 <li><a href="#players">球員</a></li>
                 <li><a href="#teams">球隊</a></li>
                 <li><a href="#stats">統計</a></li>
-                <li><a href="#news">新聞</a></li>
+                <li><a href="#data">資料</a></li>
             </ul>
         </div>
     </nav>
@@ -431,8 +505,23 @@
         <!-- 標題區域 -->
         <section class="hero-section">
             <h1 class="hero-title">NBA球員資料庫</h1>
-            <p class="hero-subtitle">探索NBA聯盟中所有現役球員的詳細資訊</p>
+            <p class="hero-subtitle">使用本地JSON資料探索NBA聯盟球員資訊</p>
         </section>
+
+        <!-- 檔案上傳區域 -->
+        <section class="file-upload-section">
+            <h2 class="file-upload-title">📁 載入JSON資料檔案</h2>
+            <div class="file-input-container">
+                <input type="file" id="jsonFileInput" accept=".json" class="file-input">
+                <button onclick="loadJSONFile()" class="upload-btn">載入資料</button>
+            </div>
+            <p style="margin-top: 15px; color: #cccccc; font-size: 0.9rem;">
+                請選擇包含NBA球員資料的JSON檔案
+            </p>
+        </section>
+
+        <!-- 資料狀態 -->
+        <div id="dataStatus" style="display: none;"></div>
 
         <!-- 搜尋區域 -->
         <section class="search-container">
@@ -443,19 +532,20 @@
                     id="searchInput" 
                     class="search-input" 
                     placeholder="輸入球員姓名，例如：LeBron James, Stephen Curry..."
+                    disabled
                 >
-                <button onclick="searchPlayers()" class="search-btn">搜尋</button>
+                <button onclick="searchPlayers()" class="search-btn" id="searchBtn" disabled>搜尋</button>
             </div>
             
             <div class="filters">
-                <select class="filter-select" id="positionFilter">
+                <select class="filter-select" id="positionFilter" disabled>
                     <option value="">所有位置</option>
                     <option value="G">後衛 (G)</option>
                     <option value="F">前鋒 (F)</option>
                     <option value="C">中鋒 (C)</option>
                 </select>
                 
-                <select class="filter-select" id="teamFilter">
+                <select class="filter-select" id="teamFilter" disabled>
                     <option value="">所有球隊</option>
                 </select>
             </div>
@@ -463,22 +553,22 @@
 
         <!-- 載入狀態 -->
         <div id="loading" class="loading" style="display: none;">
-            正在載入球員資料...
+            正在處理資料...
         </div>
-
-        <!-- 錯誤訊息 -->
-        <div id="errorMessage" class="error" style="display: none;"></div>
 
         <!-- 球員列表 -->
         <section class="players-section" id="playersSection">
-            <h2 class="section-title">球員列表</h2>
+            <h2 class="section-title">
+                球員列表
+                <span class="player-count" id="playerCount">請先載入JSON資料</span>
+            </h2>
             <div id="playersGrid" class="players-grid"></div>
             
             <!-- 無資料狀態 -->
-            <div id="noData" class="no-data" style="display: none;">
-                <div class="no-data-icon">🏀</div>
-                <div class="no-data-text">找不到符合條件的球員</div>
-                <div class="no-data-subtitle">請嘗試調整搜尋條件或篩選器</div>
+            <div id="noData" class="no-data">
+                <div class="no-data-icon">📁</div>
+                <div class="no-data-text">尚未載入資料</div>
+                <div class="no-data-subtitle">請使用上方的檔案上傳功能載入JSON資料檔</div>
             </div>
         </section>
 
@@ -492,16 +582,17 @@
 
     <script>
         // 全域變數
-        const API_BASE_URL = 'https://www.balldontlie.io/api/v1';
+        let allPlayersData = [];
+        let allTeamsData = [];
+        let filteredPlayers = [];
         let currentPage = 1;
+        let playersPerPage = 24;
         let totalPages = 1;
-        let currentSearchTerm = '';
-        let allTeams = [];
 
         // 初始化
         document.addEventListener('DOMContentLoaded', () => {
-            loadInitialData();
             setupEventListeners();
+            showNoDataState();
         });
 
         // 設置事件監聽器
@@ -516,132 +607,195 @@
             // 篩選器變化
             document.getElementById('positionFilter').addEventListener('change', filterPlayers);
             document.getElementById('teamFilter').addEventListener('change', filterPlayers);
+
+            // 檔案選擇變化
+            document.getElementById('jsonFileInput').addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    const fileName = e.target.files[0].name;
+                    showDataStatus(`已選擇檔案: ${fileName}`, 'info');
+                }
+            });
         }
 
-        // 載入初始資料
-        async function loadInitialData() {
-            await loadTeams();
-            await loadFeaturedPlayers();
-        }
+        // 載入JSON檔案
+        async function loadJSONFile() {
+            const fileInput = document.getElementById('jsonFileInput');
+            const file = fileInput.files[0];
 
-        // 載入球隊資料
-        async function loadTeams() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/teams`);;
-                const data = await response.json();
-                allTeams = data.data;
-                populateTeamFilter();
-            } catch (error) {
-                console.error('載入球隊資料失敗:', error);
+            if (!file) {
+                showDataStatus('請先選擇JSON檔案', 'error');
+                return;
             }
+
+            if (!file.name.toLowerCase().endsWith('.json')) {
+                showDataStatus('請選擇JSON格式的檔案', 'error');
+                return;
+            }
+
+            showLoading(true);
+            
+            try {
+                const text = await file.text();
+                const jsonData = JSON.parse(text);
+                
+                // 處理不同的JSON資料結構
+                if (jsonData.players && Array.isArray(jsonData.players)) {
+                    // 如果有players陣列
+                    allPlayersData = jsonData.players;
+                    if (jsonData.teams && Array.isArray(jsonData.teams)) {
+                        allTeamsData = jsonData.teams;
+                    }
+                } else if (Array.isArray(jsonData)) {
+                    // 如果整個檔案就是球員陣列
+                    allPlayersData = jsonData;
+                } else if (jsonData.data && Array.isArray(jsonData.data)) {
+                    // 如果資料在data屬性中
+                    allPlayersData = jsonData.data;
+                } else {
+                    throw new Error('無法識別的JSON資料格式');
+                }
+
+                // 驗證資料格式
+                if (allPlayersData.length === 0) {
+                    throw new Error('JSON檔案中沒有找到球員資料');
+                }
+
+                // 驗證球員資料結構
+                const samplePlayer = allPlayersData[0];
+                if (!samplePlayer.first_name && !samplePlayer.last_name && !samplePlayer.name) {
+                    throw new Error('球員資料格式不正確，缺少姓名欄位');
+                }
+
+                // 初始化資料
+                initializeData();
+                showDataStatus(`成功載入 ${allPlayersData.length} 名球員資料`, 'success');
+                
+            } catch (error) {
+                console.error('載入JSON檔案失敗:', error);
+                showDataStatus(`載入失敗: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 初始化資料
+        function initializeData() {
+            // 從球員資料中提取球隊資訊
+            if (allTeamsData.length === 0) {
+                const teamsSet = new Set();
+                allPlayersData.forEach(player => {
+                    if (player.team && player.team.full_name) {
+                        teamsSet.add(JSON.stringify(player.team));
+                    }
+                });
+                allTeamsData = Array.from(teamsSet).map(teamStr => JSON.parse(teamStr));
+            }
+
+            // 啟用搜尋功能
+            enableSearchFeatures();
+            
+            // 填充球隊篩選器
+            populateTeamFilter();
+            
+            // 顯示所有球員
+            filteredPlayers = [...allPlayersData];
+            displayPlayers();
+            
+            // 隱藏無資料狀態
+            document.getElementById('noData').style.display = 'none';
+        }
+
+        // 啟用搜尋功能
+        function enableSearchFeatures() {
+            document.getElementById('searchInput').disabled = false;
+            document.getElementById('searchBtn').disabled = false;
+            document.getElementById('positionFilter').disabled = false;
+            document.getElementById('teamFilter').disabled = false;
         }
 
         // 填充球隊篩選器
         function populateTeamFilter() {
             const teamFilter = document.getElementById('teamFilter');
-            allTeams.forEach(team => {
+            // 清除現有選項（除了預設選項）
+            teamFilter.innerHTML = '<option value="">所有球隊</option>';
+            
+            // 添加球隊選項
+            allTeamsData.forEach(team => {
                 const option = document.createElement('option');
-                option.value = team.id;
-                option.textContent = team.full_name;
+                option.value = team.id || team.full_name;
+                option.textContent = team.full_name || team.name;
                 teamFilter.appendChild(option);
             });
         }
 
-        // 載入精選球員
-        async function loadFeaturedPlayers() {
-            try {
-                showLoading(true);
-                const response = await fetch(`${API_BASE_URL}/players?per_page=24`);
-                const data = await response.json();
-                displayPlayers(data.data);
-                updatePagination(data.meta.current_page, data.meta.total_pages);
-            } catch (error) {
-                showError('載入球員資料失敗: ' + error.message);
-            } finally {
-                showLoading(false);
-            }
-        }
-
         // 搜尋球員
-        async function searchPlayers() {
-            const searchTerm = document.getElementById('searchInput').value.trim();
-            currentSearchTerm = searchTerm;
+        function searchPlayers() {
+            const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
             currentPage = 1;
-            
-            if (searchTerm) {
-                await fetchPlayers(searchTerm, 1);
-            } else {
-                await loadFeaturedPlayers();
-            }
+            filterPlayers();
         }
 
         // 篩選球員
-        async function filterPlayers() {
-            currentPage = 1;
-            if (currentSearchTerm) {
-                await fetchPlayers(currentSearchTerm, 1);
-            } else {
-                await loadFeaturedPlayers();
-            }
-        }
-
-        // 獲取球員資料
-        async function fetchPlayers(searchTerm, page = 1) {
-            try {
-                showLoading(true);
-                hideError();
-                
-                let url = `${API_BASE_URL}/players?page=${page}&per_page=24`;
-                if (searchTerm) {
-                    url += `&search=${encodeURIComponent(searchTerm)}`;
-                }
-                
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                let players = data.data;
-                
-                // 應用篩選器
-                players = applyFilters(players);
-                
-                if (players.length === 0) {
-                    showNoData();
-                } else {
-                    displayPlayers(players);
-                    updatePagination(data.meta.current_page, data.meta.total_pages);
-                }
-                
-            } catch (error) {
-                showError('搜尋失敗: ' + error.message);
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        // 應用篩選器
-        function applyFilters(players) {
+        function filterPlayers() {
+            const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
             const positionFilter = document.getElementById('positionFilter').value;
             const teamFilter = document.getElementById('teamFilter').value;
-            
-            return players.filter(player => {
-                let passPosition = !positionFilter || player.position === positionFilter;
-                let passTeam = !teamFilter || (player.team && player.team.id == teamFilter);
-                return passPosition && passTeam;
+
+            filteredPlayers = allPlayersData.filter(player => {
+                // 姓名篩選
+                const firstName = (player.first_name || '').toLowerCase();
+                const lastName = (player.last_name || '').toLowerCase();
+                const fullName = (player.name || `${firstName} ${lastName}`).toLowerCase();
+                const nameMatch = !searchTerm || 
+                    firstName.includes(searchTerm) || 
+                    lastName.includes(searchTerm) || 
+                    fullName.includes(searchTerm);
+
+                // 位置篩選
+                const positionMatch = !positionFilter || player.position === positionFilter;
+
+                // 球隊篩選
+                let teamMatch = !teamFilter;
+                if (teamFilter && player.team) {
+                    teamMatch = player.team.id == teamFilter || player.team.full_name === teamFilter;
+                }
+
+                return nameMatch && positionMatch && teamMatch;
             });
+
+            currentPage = 1;
+            displayPlayers();
         }
 
         // 顯示球員
-        function displayPlayers(players) {
-            const grid = document.getElementById('playersGrid');
-            const noData = document.getElementById('noData');
+        function displayPlayers() {
+            const playersGrid = document.getElementById('playersGrid');
+            const playerCount = document.getElementById('playerCount');
             
-            grid.innerHTML = '';
-            noData.style.display = 'none';
-            
-            players.forEach(player => {
+            // 計算分頁
+            totalPages = Math.ceil(filteredPlayers.length / playersPerPage);
+            const startIndex = (currentPage - 1) * playersPerPage;
+            const endIndex = startIndex + playersPerPage;
+            const playersToShow = filteredPlayers.slice(startIndex, endIndex);
+
+            // 更新球員計數
+            playerCount.textContent = `共 ${filteredPlayers.length} 名球員`;
+
+            // 清空並重新填充
+            playersGrid.innerHTML = '';
+
+            if (playersToShow.length === 0) {
+                showNoPlayersFound();
+                return;
+            }
+
+            playersToShow.forEach(player => {
                 const playerCard = createPlayerCard(player);
-                grid.appendChild(playerCard);
+                playersGrid.appendChild(playerCard);
             });
+
+            // 更新分頁
+            updatePagination();
         }
 
         // 創建球員卡片
@@ -649,6 +803,9 @@
             const card = document.createElement('div');
             card.className = 'player-card';
             
+            const firstName = player.first_name || '';
+            const lastName = player.last_name || '';
+            const fullName = player.name || `${firstName} ${lastName}`;
             const height = player.height || '未知';
             const weight = player.weight ? `${player.weight} lbs` : '未知';
             const position = player.position || 'N/A';
@@ -658,7 +815,7 @@
             
             card.innerHTML = `
                 <div class="player-header">
-                    <div class="player-name">${player.first_name} ${player.last_name}</div>
+                    <div class="player-name">${fullName}</div>
                     <div class="player-number">#${jerseyNumber}</div>
                 </div>
                 
@@ -683,8 +840,8 @@
                 
                 ${player.team ? `
                     <div class="team-badge">
-                        <div class="team-name">${player.team.full_name}</div>
-                        <div class="team-details">${player.team.city} • ${player.team.conference}區</div>
+                        <div class="team-name">${player.team.full_name || player.team.name}</div>
+                        <div class="team-details">${player.team.city || ''} • ${player.team.conference || ''}區</div>
                     </div>
                 ` : '<div class="team-badge">自由球員</div>'}
             `;
@@ -699,8 +856,12 @@
 
         // 顯示球員詳情
         function showPlayerDetails(player) {
+            const firstName = player.first_name || '';
+            const lastName = player.last_name || '';
+            const fullName = player.name || `${firstName} ${lastName}`;
+            
             const details = `
-球員: ${player.first_name} ${player.last_name}
+球員: ${fullName}
 位置: ${player.position || '未知'}
 身高: ${player.height || '未知'}
 體重: ${player.weight ? player.weight + ' lbs' : '未知'}
@@ -708,38 +869,20 @@
 大學: ${player.college || '未知'}
 國籍: ${player.country || '未知'}
 選秀年份: ${player.draft_year || '未知'}
-${player.team ? `球隊: ${player.team.full_name}` : '目前為自由球員'}
+${player.team ? `球隊: ${player.team.full_name || player.team.name}` : '目前為自由球員'}
             `;
             
             alert(details);
         }
 
         // 分頁功能
-        async function changePage(direction) {
+        function changePage(direction) {
             const newPage = currentPage + direction;
             if (newPage >= 1 && newPage <= totalPages) {
                 currentPage = newPage;
-                if (currentSearchTerm) {
-                    await fetchPlayers(currentSearchTerm, currentPage);
-                } else {
-                    await loadPlayersPage(currentPage);
-                }
-            }
-        }
-
-        // 載入指定頁面
-        async function loadPlayersPage(page) {
-            try {
-                showLoading(true);
-                const response = await fetch(`${API_BASE_URL}/players?page=${page}&per_page=24`);
-                const data = await response.json();
-                let players = applyFilters(data.data);
-                displayPlayers(players);
-                updatePagination(data.meta.current_page, data.meta.total_pages);
-            } catch (error) {
-                showError('載入頁面失敗: ' + error.message);
-            } finally {
-                showLoading(false);
+                displayPlayers();
+                // 滾動到頂部
+                document.getElementById('playersSection').scrollIntoView({ behavior: 'smooth' });
             }
         }
 
