@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA球員資料庫</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        /* 導航欄 */
+        .navbar {
+            background: linear-gradient(90deg, #ff6b35, #f7931e);
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #ffeb3b;
+        }
+
+        /* 主要內容區域 */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* 標題區域 */
+        .hero-section {
+            text-align: center;
+            margin-bottom: 50px;
+            background: linear-gradient(135deg, rgba(255,107,53,0.1), rgba(247,147,30,0.1));
+            border-radius: 20px;
+            padding: 60px 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: #cccccc;
+            margin-bottom: 30px;
+        }
+
+        /* 搜尋區域 */
+        .search-container {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .search-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #ff6b35;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 15px 20px;
+            border: 2px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+
+        .search-input:focus {
+            border-color: #ff6b35;
+            background: rgba(255,255,255,0.15);
+        }
+
+        .search-btn {
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,107,53,0.4);
+        }
+
+        /* 篩選器 */
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 10px 15px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            color: white;
+            outline: none;
+        }
+
+        .filter-select option {
+            background: #333;
+            color: white;
+        }
+
+        /* 載入狀態 */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+            color: #ff6b35;
+        }
+
+        .loading::before {
+            content: "🏀";
+            display: block;
+            font-size: 3rem;
+            margin-bottom: 15px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        /* 錯誤訊息 */
+        .error {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(255,107,107,0.3);
+        }
+
+        /* 球員列表 */
+        .players-section {
+            margin-top: 40px;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: #ff6b35;
+            border-bottom: 2px solid #ff6b35;
+            padding-bottom: 10px;
+        }
+
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .player-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .player-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6b35, #f7931e);
+        }
+
+        .player-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(255,107,53,0.3);
+            border-color: #ff6b35;
+        }
+
+        .player-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .player-name {
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #ffffff;
+        }
+
+        .player-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ff6b35;
+            opacity: 0.8;
+        }
+
+        .player-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .detail-label {
+            font-size: 0.85rem;
+            color: #cccccc;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .team-badge {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .team-name {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .team-details {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* 分頁 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 50px 0;
+            gap: 15px;
+        }
+
+        .page-btn {
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            border-color: #ff6b35;
+            transform: translateY(-2px);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            color: #cccccc;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .search-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-input {
+                min-width: auto;
+                margin-bottom: 10px;
+            }
+            
+            .filters {
+                justify-content: center;
+            }
+            
+            .players-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+        }
+
+        /* 無資料狀態 */
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #cccccc;
+        }
+
+        .no-data-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .no-data-text {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .no-data-subtitle {
+            color: #999999;
+        }
+    </style>
+</head>
+<body>
+    <!-- 導航欄 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">🏀 NBA Database</div>
+            <ul class="nav-links">
+                <li><a href="#players">球員</a></li>
+                <li><a href="#teams">球隊</a></li>
+                <li><a href="#stats">統計</a></li>
+                <li><a href="#news">新聞</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 主要內容 -->
+    <main class="main-content">
+        <!-- 標題區域 -->
+        <section class="hero-section">
+            <h1 class="hero-title">NBA球員資料庫</h1>
+            <p class="hero-subtitle">探索NBA聯盟中所有現役球員的詳細資訊</p>
+        </section>
+
+        <!-- 搜尋區域 -->
+        <section class="search-container">
+            <h2 class="search-title">🔍 搜尋球員</h2>
+            <div class="search-form">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    class="search-input" 
+                    placeholder="輸入球員姓名，例如：LeBron James, Stephen Curry..."
+                >
+                <button onclick="searchPlayers()" class="search-btn">搜尋</button>
+            </div>
+            
+            <div class="filters">
+                <select class="filter-select" id="positionFilter">
+                    <option value="">所有位置</option>
+                    <option value="G">後衛 (G)</option>
+                    <option value="F">前鋒 (F)</option>
+                    <option value="C">中鋒 (C)</option>
+                </select>
+                
+                <select class="filter-select" id="teamFilter">
+                    <option value="">所有球隊</option>
+                </select>
+            </div>
+        </section>
+
+        <!-- 載入狀態 -->
+        <div id="loading" class="loading" style="display: none;">
+            正在載入球員資料...
+        </div>
+
+        <!-- 錯誤訊息 -->
+        <div id="errorMessage" class="error" style="display: none;"></div>
+
+        <!-- 球員列表 -->
+        <section class="players-section" id="playersSection">
+            <h2 class="section-title">球員列表</h2>
+            <div id="playersGrid" class="players-grid"></div>
+            
+            <!-- 無資料狀態 -->
+            <div id="noData" class="no-data" style="display: none;">
+                <div class="no-data-icon">🏀</div>
+                <div class="no-data-text">找不到符合條件的球員</div>
+                <div class="no-data-subtitle">請嘗試調整搜尋條件或篩選器</div>
+            </div>
+        </section>
+
+        <!-- 分頁 -->
+        <div class="pagination" id="pagination" style="display: none;">
+            <button class="page-btn" id="prevBtn" onclick="changePage(-1)">⬅️ 上一頁</button>
+            <span class="page-info" id="pageInfo"></span>
+            <button class="page-btn" id="nextBtn" onclick="changePage(1)">下一頁 ➡️</button>
+        </div>
+    </main>
+
+    <script>
+        // 全域變數
+        const API_BASE_URL = 'https://www.balldontlie.io/api/v1';
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentSearchTerm = '';
+        let allTeams = [];
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadInitialData();
+            setupEventListeners();
+        });
+
+        // 設置事件監聽器
+        function setupEventListeners() {
+            // Enter鍵搜尋
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    searchPlayers();
+                }
+            });
+
+            // 篩選器變化
+            document.getElementById('positionFilter').addEventListener('change', filterPlayers);
+            document.getElementById('teamFilter').addEventListener('change', filterPlayers);
+        }
+
+        // 載入初始資料
+        async function loadInitialData() {
+            await loadTeams();
+            await loadFeaturedPlayers();
+        }
+
+        // 載入球隊資料
+        async function loadTeams() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/teams`);;
+                const data = await response.json();
+                allTeams = data.data;
+                populateTeamFilter();
+            } catch (error) {
+                console.error('載入球隊資料失敗:', error);
+            }
+        }
+
+        // 填充球隊篩選器
+        function populateTeamFilter() {
+            const teamFilter = document.getElementById('teamFilter');
+            allTeams.forEach(team => {
+                const option = document.createElement('option');
+                option.value = team.id;
+                option.textContent = team.full_name;
+                teamFilter.appendChild(option);
+            });
+        }
+
+        // 載入精選球員
+        async function loadFeaturedPlayers() {
+            try {
+                showLoading(true);
+                const response = await fetch(`${API_BASE_URL}/players?per_page=24`);
+                const data = await response.json();
+                displayPlayers(data.data);
+                updatePagination(data.meta.current_page, data.meta.total_pages);
+            } catch (error) {
+                showError('載入球員資料失敗: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 搜尋球員
+        async function searchPlayers() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            currentSearchTerm = searchTerm;
+            currentPage = 1;
+            
+            if (searchTerm) {
+                await fetchPlayers(searchTerm, 1);
+            } else {
+                await loadFeaturedPlayers();
+            }
+        }
+
+        // 篩選球員
+        async function filterPlayers() {
+            currentPage = 1;
+            if (currentSearchTerm) {
+                await fetchPlayers(currentSearchTerm, 1);
+            } else {
+                await loadFeaturedPlayers();
+            }
+        }
+
+        // 獲取球員資料
+        async function fetchPlayers(searchTerm, page = 1) {
+            try {
+                showLoading(true);
+                hideError();
+                
+                let url = `${API_BASE_URL}/players?page=${page}&per_page=24`;
+                if (searchTerm) {
+                    url += `&search=${encodeURIComponent(searchTerm)}`;
+                }
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                let players = data.data;
+                
+                // 應用篩選器
+                players = applyFilters(players);
+                
+                if (players.length === 0) {
+                    showNoData();
+                } else {
+                    displayPlayers(players);
+                    updatePagination(data.meta.current_page, data.meta.total_pages);
+                }
+                
+            } catch (error) {
+                showError('搜尋失敗: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 應用篩選器
+        function applyFilters(players) {
+            const positionFilter = document.getElementById('positionFilter').value;
+            const teamFilter = document.getElementById('teamFilter').value;
+            
+            return players.filter(player => {
+                let passPosition = !positionFilter || player.position === positionFilter;
+                let passTeam = !teamFilter || (player.team && player.team.id == teamFilter);
+                return passPosition && passTeam;
+            });
+        }
+
+        // 顯示球員
+        function displayPlayers(players) {
+            const grid = document.getElementById('playersGrid');
+            const noData = document.getElementById('noData');
+            
+            grid.innerHTML = '';
+            noData.style.display = 'none';
+            
+            players.forEach(player => {
+                const playerCard = createPlayerCard(player);
+                grid.appendChild(playerCard);
+            });
+        }
+
+        // 創建球員卡片
+        function createPlayerCard(player) {
+            const card = document.createElement('div');
+            card.className = 'player-card';
+            
+            const height = player.height || '未知';
+            const weight = player.weight ? `${player.weight} lbs` : '未知';
+            const position = player.position || 'N/A';
+            const jerseyNumber = player.jersey_number || '?';
+            const college = player.college || '未知';
+            const country = player.country || '未知';
+            
+            card.innerHTML = `
+                <div class="player-header">
+                    <div class="player-name">${player.first_name} ${player.last_name}</div>
+                    <div class="player-number">#${jerseyNumber}</div>
+                </div>
+                
+                <div class="player-details">
+                    <div class="detail-item">
+                        <div class="detail-label">位置</div>
+                        <div class="detail-value">${position}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">身高</div>
+                        <div class="detail-value">${height}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">體重</div>
+                        <div class="detail-value">${weight}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">國籍</div>
+                        <div class="detail-value">${country}</div>
+                    </div>
+                </div>
+                
+                ${player.team ? `
+                    <div class="team-badge">
+                        <div class="team-name">${player.team.full_name}</div>
+                        <div class="team-details">${player.team.city} • ${player.team.conference}區</div>
+                    </div>
+                ` : '<div class="team-badge">自由球員</div>'}
+            `;
+
+            // 點擊事件
+            card.addEventListener('click', () => {
+                showPlayerDetails(player);
+            });
+
+            return card;
+        }
+
+        // 顯示球員詳情
+        function showPlayerDetails(player) {
+            const details = `
+球員: ${player.first_name} ${player.last_name}
+位置: ${player.position || '未知'}
+身高: ${player.height || '未知'}
+體重: ${player.weight ? player.weight + ' lbs' : '未知'}
+球衣號碼: #${player.jersey_number || '未知'}
+大學: ${player.college || '未知'}
+國籍: ${player.country || '未知'}
+選秀年份: ${player.draft_year || '未知'}
+${player.team ? `球隊: ${player.team.full_name}` : '目前為自由球員'}
+            `;
+            
+            alert(details);
+        }
+
+        // 分頁功能
+        async function changePage(direction) {
+            const newPage = currentPage + direction;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                if (currentSearchTerm) {
+                    await fetchPlayers(currentSearchTerm, currentPage);
+                } else {
+                    await loadPlayersPage(currentPage);
+                }
+            }
+        }
+
+        // 載入指定頁面
+        async function loadPlayersPage(page) {
+            try {
+                showLoading(true);
+                const response = await fetch(`${API_BASE_URL}/players?page=${page}&per_page=24`);
+                const data = await response.json();
+                let players = applyFilters(data.data);
+                displayPlayers(players);
+                updatePagination(data.meta.current_page, data.meta.total_pages);
+            } catch (error) {
+                showError('載入頁面失敗: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 更新分頁
+        function updatePagination(current, total) {
+            currentPage = current;
+            totalPages = total;
+            
+            const pagination = document.getElementById('pagination');
+            const pageInfo = document.getElementById('pageInfo');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            if (total > 1) {
+                pagination.style.display = 'flex';
+                pageInfo.textContent = `第 ${current} 頁，共 ${total} 頁`;
+                prevBtn.disabled = current === 1;
+                nextBtn.disabled = current === total;
+            } else {
+                pagination.style.display = 'none';
+            }
+        }
+
+        // 顯示載入狀態
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        // 顯示錯誤
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => errorDiv.style.display = 'none', 5000);
+        }
+
+        // 隱藏錯誤
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // 顯示無資料狀態
+        function showNoData() {
+            document.getElementById('playersGrid').innerHTML = '';
+            document.getElementById('noData').style.display = 'block';
+            document.getElementById('pagination').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
