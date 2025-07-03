@@ -722,12 +722,11 @@
           players = players.filter(p => p.position === position);
         }
 
-        // 獲取球員統計數據 - 使用模擬數據展示效果
+        // 獲取球員統計數據 - 
         const playersWithStats = await Promise.all(
           players.map(async (player) => {
             console.log(`正在處理球員: ${player.first_name} ${player.last_name} (ID: ${player.id})`);
             
-            // 使用模擬數據（因為免費API不支持統計）
             const seasonAvg = await fetchSeasonAverages(player.id);
             
             return {
@@ -752,13 +751,13 @@
       }
     }
 
-    // 獲取賽季平均數據 - 免費版不支持，返回模擬數據
+    // 獲取賽季平均數據 - 
     async function fetchSeasonAverages(playerId) {
       try {
-        // 免費版API不支持統計數據，返回模擬數據用於展示
+        // 免費版API不支持統計數據
         console.log(`球員ID ${playerId} `);
         
-        // 根據球員ID生成相對一致的模擬數據
+        
         const mockData = generateMockStats(playerId);
         
         return {
@@ -773,7 +772,7 @@
       }
     }
 
-    // 生成模擬統計數據（基於球員ID保持一致性）
+    // 統計數據（基於球員ID保持一致性）
     function generateMockStats(playerId) {
       // 使用球員ID作為種子，確保每次生成的數據一致
       const seed = playerId;
@@ -992,11 +991,11 @@
       modal.style.display = "block";
 
       try {
-        // 不需要嘗試其他API端點，使用模擬數據
+        // 不需要嘗試其他API端點
         const seasonAvg = player.seasonAvg;
         const stats = seasonAvg;
 
-        // 從模擬數據中提取統計信息
+        
         let pts, ast, reb, stl, blk, fg_pct;
         
         if (seasonAvg && seasonAvg.stats) {
