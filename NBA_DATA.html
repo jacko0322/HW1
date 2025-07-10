@@ -213,6 +213,8 @@
             background: rgba(255, 255, 255, 0.95);
             transform: rotateY(180deg);
             overflow-y: auto;
+            position: relative;
+            padding-bottom: 50px;
         }
 
         .player-photo {
@@ -261,6 +263,11 @@
             font-size: 0.8em;
             opacity: 0.7;
             animation: pulse 2s infinite;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 5px 10px;
+            border-radius: 15px;
+            border: 1px solid #ddd;
         }
 
         @keyframes pulse {
@@ -356,6 +363,7 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 15px;
             margin-top: 20px;
+            margin-bottom: 60px;
         }
 
         .stat-item {
@@ -1088,7 +1096,7 @@
                                 `}
                             </div>
                             
-                            <div class="flip-hint" style="margin-top: 15px;">點擊返回 ↻</div>
+                            <div class="flip-hint">點擊返回 ↻</div>
                         </div>
                     </div>
                 </div>
