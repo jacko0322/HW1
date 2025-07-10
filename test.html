@@ -3,36 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NBA API 球員數據可用性檢查器</title>
+    <title>NBA API 數據下載器</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             min-height: 100vh;
+            padding: 20px;
+            color: white;
         }
         
         .container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
         }
         
         h1 {
-            color: #333;
             text-align: center;
             margin-bottom: 30px;
             font-size: 2.5em;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
         
         .controls {
-            text-align: center;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
             margin-bottom: 30px;
         }
         
@@ -40,210 +41,187 @@
             background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
             border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
+            padding: 15px 25px;
+            border-radius: 10px;
             cursor: pointer;
             font-size: 16px;
             font-weight: bold;
             transition: all 0.3s;
-            margin: 0 10px;
         }
         
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
         }
         
         button:disabled {
-            background: #ccc;
+            background: #666;
             cursor: not-allowed;
             transform: none;
-            box-shadow: none;
         }
         
         .progress {
-            background: #f0f0f0;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 20px;
-            height: 30px;
-            position: relative;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 20px;
+            margin: 20px 0;
         }
         
         .progress-bar {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            height: 100%;
-            width: 0%;
-            transition: width 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
+            background: linear-gradient(45deg, #00c851, #007e33);
+            height: 20px;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            position: relative;
+            overflow: hidden;
         }
         
-        .results {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 20px;
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
+            animation: shimmer 2s infinite;
         }
         
-        .result-section {
-            background: #f8f9fa;
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .log {
+            background: rgba(0, 0, 0, 0.3);
             border-radius: 10px;
             padding: 20px;
-            border: 2px solid #e9ecef;
-        }
-        
-        .success {
-            border-color: #28a745;
-        }
-        
-        .error {
-            border-color: #dc3545;
-        }
-        
-        .result-header {
-            font-size: 1.2em;
-            font-weight: bold;
-            margin-bottom: 15px;
-            padding: 10px;
-            border-radius: 5px;
-            text-align: center;
-        }
-        
-        .success .result-header {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .error .result-header {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .player-list {
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
             max-height: 400px;
             overflow-y: auto;
-            border: 1px solid #ddd;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px 10px;
             border-radius: 5px;
-            background: white;
         }
         
-        .player-item {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .log-success { background: rgba(0, 200, 81, 0.2); color: #4eff88; }
+        .log-error { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+        .log-info { background: rgba(255, 255, 255, 0.1); color: #e0e0e0; }
+        .log-warning { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
         
-        .player-item:last-child {
-            border-bottom: none;
-        }
-        
-        .player-rank {
-            background: #007bff;
-            color: white;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        
-        .summary {
-            background: #e9ecef;
-            border-radius: 10px;
+        .download-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
             padding: 20px;
-            margin-bottom: 20px;
+            margin: 20px 0;
             text-align: center;
         }
         
-        .stat-box {
-            display: inline-block;
-            margin: 0 15px;
-            padding: 10px 20px;
-            background: white;
+        .download-btn {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            padding: 15px 30px;
+            font-size: 18px;
+            margin: 10px;
+            border-radius: 15px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 15px;
+            text-align: center;
         }
         
         .stat-number {
             font-size: 2em;
             font-weight: bold;
-            color: #667eea;
+            color: #4eff88;
         }
         
         .stat-label {
             font-size: 0.9em;
-            color: #666;
+            opacity: 0.8;
             text-transform: uppercase;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 20px;
-            font-style: italic;
-            color: #666;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🏀 NBA API 球員數據可用性檢查器</h1>
+        <h1>🏀 NBA API 數據下載器</h1>
+        <p style="text-align: center; margin-bottom: 30px; opacity: 0.9;">
+            從 NBA API 下載前100名球員數據並生成靜態 JSON 文件
+        </p>
         
         <div class="controls">
-            <button onclick="checkAllPlayers()" id="checkBtn">開始檢查所有100名球員</button>
-            <button onclick="checkTop20()" id="checkTop20Btn">僅檢查前20名</button>
-            <button onclick="resetResults()" id="resetBtn">重置結果</button>
+            <button onclick="startDownload('advanced')" id="downloadAdvanced">
+                📊 下載進階統計
+            </button>
+            <button onclick="startDownload('totals')" id="downloadTotals">
+                📈 下載基本統計
+            </button>
+            <button onclick="startDownload('both')" id="downloadBoth">
+                🚀 下載完整數據
+            </button>
+            <button onclick="clearLog()" id="clearLog">
+                🗑️ 清除日誌
+            </button>
+        </div>
+        
+        <div class="stats" id="statsContainer" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-number" id="successCount">0</div>
+                <div class="stat-label">成功</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="errorCount">0</div>
+                <div class="stat-label">失敗</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalCount">100</div>
+                <div class="stat-label">總計</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="progressPercent">0%</div>
+                <div class="stat-label">進度</div>
+            </div>
         </div>
         
         <div class="progress" id="progressContainer" style="display: none;">
-            <div class="progress-bar" id="progressBar">0%</div>
-        </div>
-        
-        <div class="summary" id="summary" style="display: none;">
-            <div class="stat-box">
-                <div class="stat-number" id="totalChecked">0</div>
-                <div class="stat-label">已檢查</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span id="progressText">準備開始...</span>
+                <span id="progressCount">0/100</span>
             </div>
-            <div class="stat-box">
-                <div class="stat-number" id="successCount">0</div>
-                <div class="stat-label">成功找到</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-number" id="errorCount">0</div>
-                <div class="stat-label">找不到</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-number" id="successRate">0%</div>
-                <div class="stat-label">成功率</div>
+            <div style="background: rgba(255,255,255,0.2); border-radius: 10px; overflow: hidden;">
+                <div class="progress-bar" id="progressBar" style="width: 0%;"></div>
             </div>
         </div>
         
-        <div class="results" id="results" style="display: none;">
-            <div class="result-section success">
-                <div class="result-header">✅ API中找到的球員</div>
-                <div class="player-list" id="successList"></div>
-            </div>
-            
-            <div class="result-section error">
-                <div class="result-header">❌ API中找不到的球員</div>
-                <div class="player-list" id="errorList"></div>
-            </div>
+        <div class="log" id="logContainer">
+            <div class="log-entry log-info">📋 等待開始下載...</div>
         </div>
         
-        <div class="loading" id="loadingMsg" style="display: none;">
-            正在檢查球員數據可用性...
+        <div class="download-section" id="downloadSection" style="display: none;">
+            <h3>📁 下載完成的文件</h3>
+            <p>點擊下方按鈕下載 JSON 數據文件，然後上傳到您的 GitHub 倉庫</p>
+            <div id="downloadButtons"></div>
         </div>
     </div>
 
     <script>
+        // HoopsHype 2024-25 前100名球員名單
         const top100Players = [
             "Nikola Jokic", "Luka Doncic", "Shai Gilgeous-Alexander", "Giannis Antetokounmpo", "Joel Embiid",
             "Jayson Tatum", "Anthony Edwards", "Jalen Brunson", "Anthony Davis", "Victor Wembanyama",
@@ -267,164 +245,221 @@
             "Khris Middleton", "Deandre Ayton", "Collin Sexton", "Dereck Lively", "Klay Thompson"
         ];
 
-        let successPlayers = [];
-        let errorPlayers = [];
-        let currentIndex = 0;
-        let isChecking = false;
+        // 球員姓名映射表
+        const playerNameMappings = {
+            "Nikola Jokic": ["Nikola Jokic", "Nikola Jokić"],
+            "Luka Doncic": ["Luka Doncic", "Luka Dončić", "Luka Dončic"],
+            "Kristaps Porzingis": ["Kristaps Porzingis", "Kristaps Porziņģis"],
+            "Herb Jones": ["Herb Jones", "Herbert Jones"],
+            "Nikola Vucevic": ["Nikola Vucevic", "Nikola Vučević"],
+            "PJ Washington": ["PJ Washington", "P.J. Washington"],
+            "RJ Barrett": ["RJ Barrett", "R.J. Barrett"],
+            "CJ McCollum": ["CJ McCollum", "C.J. McCollum"],
+            "OG Anunoby": ["OG Anunoby", "O.G. Anunoby"],
+            "Alperen Sengun": ["Alperen Sengun", "Alperen Şengün"],
+            "Jaren Jackson Jr": ["Jaren Jackson Jr", "Jaren Jackson Jr."],
+            "Karl-Anthony Towns": ["Karl-Anthony Towns", "Karl Anthony Towns"]
+        };
 
-        async function checkAllPlayers() {
-            await checkPlayers(top100Players);
-        }
-
-        async function checkTop20() {
-            await checkPlayers(top100Players.slice(0, 20));
-        }
-
-        async function checkPlayers(playerList) {
-            if (isChecking) return;
-            
-            isChecking = true;
-            resetResults();
-            
-            const checkBtn = document.getElementById('checkBtn');
-            const checkTop20Btn = document.getElementById('checkTop20Btn');
-            const progressContainer = document.getElementById('progressContainer');
-            const progressBar = document.getElementById('progressBar');
-            const loadingMsg = document.getElementById('loadingMsg');
-            
-            checkBtn.disabled = true;
-            checkTop20Btn.disabled = true;
-            progressContainer.style.display = 'block';
-            loadingMsg.style.display = 'block';
-            
-            successPlayers = [];
-            errorPlayers = [];
-            currentIndex = 0;
-            
-            for (let i = 0; i < playerList.length; i++) {
-                const playerName = playerList[i];
-                currentIndex = i + 1;
-                
-                // 更新進度
-                const progress = ((i + 1) / playerList.length) * 100;
-                progressBar.style.width = progress + '%';
-                progressBar.textContent = `${Math.round(progress)}% (${i + 1}/${playerList.length})`;
-                
-                loadingMsg.textContent = `正在檢查: ${playerName} (${i + 1}/${playerList.length})`;
-                
-                try {
-                    const success = await checkPlayerInAPI(playerName, i + 1);
-                    if (success) {
-                        successPlayers.push({name: playerName, rank: i + 1, data: success});
-                    } else {
-                        errorPlayers.push({name: playerName, rank: i + 1});
-                    }
-                } catch (error) {
-                    console.error(`檢查 ${playerName} 時出錯:`, error);
-                    errorPlayers.push({name: playerName, rank: i + 1, error: error.message});
-                }
-                
-                // 更新實時統計
-                updateSummary();
-                
-                // 小延遲避免API請求過於頻繁
-                await new Promise(resolve => setTimeout(resolve, 200));
+        let downloadedData = {
+            advanced: [],
+            totals: [],
+            metadata: {
+                downloadDate: new Date().toISOString(),
+                playerCount: 100,
+                successCount: 0,
+                errorCount: 0
             }
-            
-            // 顯示最終結果
-            displayResults();
-            
-            checkBtn.disabled = false;
-            checkTop20Btn.disabled = false;
-            loadingMsg.style.display = 'none';
-            isChecking = false;
+        };
+
+        let currentDownload = null;
+
+        // 添加日誌
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
         }
 
-        async function checkPlayerInAPI(playerName, rank) {
-            try {
-                // 嘗試多種API端點
-                const endpoints = ['PlayerDataAdvanced', 'PlayerDataTotals'];
-                
-                for (const endpoint of endpoints) {
-                    const encodedName = encodeURIComponent(playerName);
-                    const response = await fetch(`http://rest.nbaapi.com/api/${endpoint}/name/${encodedName}`);
+        // 更新進度
+        function updateProgress(current, total, text) {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progressCount = document.getElementById('progressCount');
+            const progressPercent = document.getElementById('progressPercent');
+            
+            const percent = Math.round((current / total) * 100);
+            
+            progressBar.style.width = `${percent}%`;
+            progressText.textContent = text;
+            progressCount.textContent = `${current}/${total}`;
+            progressPercent.textContent = `${percent}%`;
+        }
+
+        // 更新統計
+        function updateStats(success, error) {
+            document.getElementById('successCount').textContent = success;
+            document.getElementById('errorCount').textContent = error;
+        }
+
+        // 下載單個球員數據
+        async function downloadPlayerData(playerName, playerIndex, endpoint) {
+            const nameVariants = playerNameMappings[playerName] || [playerName];
+            
+            for (const variant of nameVariants) {
+                try {
+                    const encodedName = encodeURIComponent(variant);
+                    const url = `http://rest.nbaapi.com/api/${endpoint}/name/${encodedName}`;
+                    
+                    const response = await fetch(url);
                     
                     if (response.ok) {
-                        const data = await response.json();
-                        if (Array.isArray(data) && data.length > 0) {
-                            return {
-                                endpoint: endpoint,
-                                dataCount: data.length,
-                                latestSeason: Math.max(...data.map(d => d.season || 0)),
-                                team: data[0].team || 'N/A'
-                            };
+                        const playerData = await response.json();
+                        if (Array.isArray(playerData) && playerData.length > 0) {
+                            const latestData = playerData.sort((a, b) => b.season - a.season)[0];
+                            latestData.hoopsHypeRank = playerIndex + 1;
+                            latestData.originalName = playerName;
+                            latestData.downloadDate = new Date().toISOString();
+                            
+                            addLog(`✅ ${playerIndex + 1}/100: ${playerName} (${variant})`, 'success');
+                            return latestData;
                         }
                     }
+                } catch (error) {
+                    addLog(`❌ ${playerIndex + 1}/100: ${playerName} - ${error.message}`, 'error');
+                }
+            }
+            
+            addLog(`⚠️ ${playerIndex + 1}/100: ${playerName} - 未找到數據`, 'warning');
+            return null;
+        }
+
+        // 開始下載
+        async function startDownload(type) {
+            // 禁用所有按鈕
+            document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+            
+            // 顯示進度組件
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('statsContainer').style.display = 'grid';
+            document.getElementById('downloadSection').style.display = 'none';
+            
+            currentDownload = type;
+            let successCount = 0;
+            let errorCount = 0;
+            
+            addLog(`🚀 開始下載 ${type} 數據...`, 'info');
+            
+            const endpoints = [];
+            if (type === 'advanced' || type === 'both') endpoints.push('PlayerDataAdvanced');
+            if (type === 'totals' || type === 'both') endpoints.push('PlayerDataTotals');
+            
+            for (const endpoint of endpoints) {
+                const dataType = endpoint === 'PlayerDataAdvanced' ? 'advanced' : 'totals';
+                addLog(`📊 開始下載 ${dataType} 統計數據...`, 'info');
+                
+                for (let i = 0; i < top100Players.length; i++) {
+                    const playerName = top100Players[i];
+                    
+                    updateProgress(i, top100Players.length, `正在下載 ${dataType}: ${playerName}`);
+                    
+                    const playerData = await downloadPlayerData(playerName, i, endpoint);
+                    
+                    if (playerData) {
+                        downloadedData[dataType].push(playerData);
+                        successCount++;
+                    } else {
+                        errorCount++;
+                    }
+                    
+                    updateStats(successCount, errorCount);
+                    
+                    // 小延遲避免被限制
+                    await new Promise(resolve => setTimeout(resolve, 100));
                 }
                 
-                return false;
-            } catch (error) {
-                console.error(`API請求失敗 ${playerName}:`, error);
-                return false;
+                addLog(`📈 ${dataType} 數據下載完成: 成功 ${downloadedData[dataType].length}/100`, 'info');
             }
+            
+            // 更新元數據
+            downloadedData.metadata.successCount = successCount;
+            downloadedData.metadata.errorCount = errorCount;
+            downloadedData.metadata.downloadedTypes = endpoints.map(e => e === 'PlayerDataAdvanced' ? 'advanced' : 'totals');
+            
+            updateProgress(100, 100, '下載完成！');
+            addLog(`🎉 所有數據下載完成！成功: ${successCount}, 失敗: ${errorCount}`, 'success');
+            
+            // 顯示下載按鈕
+            showDownloadButtons();
+            
+            // 重新啟用按鈕
+            document.querySelectorAll('button').forEach(btn => btn.disabled = false);
         }
 
-        function updateSummary() {
-            const summary = document.getElementById('summary');
-            summary.style.display = 'block';
+        // 顯示下載按鈕
+        function showDownloadButtons() {
+            const downloadSection = document.getElementById('downloadSection');
+            const downloadButtons = document.getElementById('downloadButtons');
             
-            document.getElementById('totalChecked').textContent = currentIndex;
-            document.getElementById('successCount').textContent = successPlayers.length;
-            document.getElementById('errorCount').textContent = errorPlayers.length;
+            downloadButtons.innerHTML = '';
             
-            const successRate = currentIndex > 0 ? ((successPlayers.length / currentIndex) * 100).toFixed(1) : 0;
-            document.getElementById('successRate').textContent = successRate + '%';
+            if (downloadedData.advanced.length > 0) {
+                const advancedBtn = document.createElement('button');
+                advancedBtn.className = 'download-btn';
+                advancedBtn.innerHTML = '📊 下載進階統計 JSON';
+                advancedBtn.onclick = () => downloadJSON(downloadedData.advanced, 'nba-advanced-stats.json');
+                downloadButtons.appendChild(advancedBtn);
+            }
+            
+            if (downloadedData.totals.length > 0) {
+                const totalsBtn = document.createElement('button');
+                totalsBtn.className = 'download-btn';
+                totalsBtn.innerHTML = '📈 下載基本統計 JSON';
+                totalsBtn.onclick = () => downloadJSON(downloadedData.totals, 'nba-basic-stats.json');
+                downloadButtons.appendChild(totalsBtn);
+            }
+            
+            // 下載合併數據
+            const combinedBtn = document.createElement('button');
+            combinedBtn.className = 'download-btn';
+            combinedBtn.innerHTML = '🚀 下載完整數據包';
+            combinedBtn.onclick = () => downloadJSON(downloadedData, 'nba-complete-data.json');
+            downloadButtons.appendChild(combinedBtn);
+            
+            downloadSection.style.display = 'block';
         }
 
-        function displayResults() {
-            const results = document.getElementById('results');
-            const successList = document.getElementById('successList');
-            const errorList = document.getElementById('errorList');
+        // 下載 JSON 文件
+        function downloadJSON(data, filename) {
+            const jsonString = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
             
-            results.style.display = 'grid';
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
             
-            // 顯示成功的球員
-            successList.innerHTML = successPlayers.map(player => `
-                <div class="player-item">
-                    <div>
-                        <div class="player-rank">${player.rank}</div>
-                    </div>
-                    <div style="flex: 1; margin-left: 15px;">
-                        <strong>${player.name}</strong><br>
-                        <small>球隊: ${player.data.team} | 數據筆數: ${player.data.dataCount} | 最新賽季: ${player.data.latestSeason}</small>
-                    </div>
-                </div>
-            `).join('');
-            
-            // 顯示失敗的球員
-            errorList.innerHTML = errorPlayers.map(player => `
-                <div class="player-item">
-                    <div>
-                        <div class="player-rank" style="background: #dc3545;">${player.rank}</div>
-                    </div>
-                    <div style="flex: 1; margin-left: 15px;">
-                        <strong>${player.name}</strong><br>
-                        <small style="color: #dc3545;">API中找不到數據</small>
-                    </div>
-                </div>
-            `).join('');
+            addLog(`📁 已下載: ${filename} (${(blob.size / 1024).toFixed(2)} KB)`, 'success');
         }
 
-        function resetResults() {
-            document.getElementById('progressContainer').style.display = 'none';
-            document.getElementById('summary').style.display = 'none';
-            document.getElementById('results').style.display = 'none';
-            document.getElementById('loadingMsg').style.display = 'none';
-            
-            successPlayers = [];
-            errorPlayers = [];
-            currentIndex = 0;
+        // 清除日誌
+        function clearLog() {
+            document.getElementById('logContainer').innerHTML = '<div class="log-entry log-info">📋 日誌已清除</div>';
         }
+
+        // 頁面載入時的初始化
+        window.onload = function() {
+            addLog('🏀 NBA API 數據下載器已準備就緒', 'info');
+            addLog('💡 建議先在本地環境運行此工具以避免 CORS 問題', 'warning');
+            addLog('🔧 如果遇到 CORS 錯誤，請使用 Live Server 或類似工具', 'info');
+        };
     </script>
 </body>
 </html>
