@@ -170,7 +170,6 @@
             position: relative;
             height: 350px;
             cursor: pointer;
-            perspective: 1000px;
         }
 
         .player-card:hover {
@@ -214,7 +213,6 @@
             transform: rotateY(180deg);
             overflow-y: auto;
             position: relative;
-            padding-bottom: 50px;
         }
 
         .player-photo {
@@ -255,7 +253,7 @@
             backdrop-filter: blur(10px);
         }
 
-        .flip-hint {
+        .flip-hint-front {
             position: absolute;
             bottom: 15px;
             left: 50%;
@@ -263,11 +261,22 @@
             font-size: 0.8em;
             opacity: 0.7;
             animation: pulse 2s infinite;
-            z-index: 10;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 5px 10px;
-            border-radius: 15px;
-            border: 1px solid #ddd;
+            color: white;
+        }
+
+        .flip-hint-back {
+            background: rgba(30, 60, 114, 0.9);
+            color: white;
+            padding: 12px 15px;
+            margin-top: auto;
+            border-radius: 0 0 20px 20px;
+            font-weight: bold;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            font-size: 0.9em;
+            opacity: 0.8;
+            animation: pulse 2s infinite;
+            cursor: pointer;
         }
 
         @keyframes pulse {
@@ -363,7 +372,7 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 15px;
             margin-top: 20px;
-            margin-bottom: 60px;
+            flex-grow: 1;
         }
 
         .stat-item {
@@ -1013,7 +1022,7 @@
                             <div class="player-name">${player.playerName}</div>
                             <div class="player-team">${player.team}</div>
                             <div class="hoopshype-rank">RANK #${rank}</div>
-                            <div class="flip-hint">點擊查看數據 ↻</div>
+                            <div class="flip-hint-front">點擊查看數據 ↻</div>
                         </div>
                         
                         <!-- 背面 -->
@@ -1096,7 +1105,7 @@
                                 `}
                             </div>
                             
-                            <div class="flip-hint">點擊返回 ↻</div>
+                            <div class="flip-hint-back">點擊返回 ↻</div>
                         </div>
                     </div>
                 </div>
